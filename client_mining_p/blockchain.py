@@ -130,10 +130,21 @@ node_identifier = str(uuid4()).replace('-', '')
 blockchain = Blockchain()
 
 
+@app.route('/last_block', methods=['GET'])
+def last_block():
+    block = blockchain.last_block
+    response = {
+        'last_block': block
+    }
+    return jsonify(response), 200
+
+
 @app.route('/mine', methods=['POST'])
 def mine():
     # Run the proof of work algorithm to get the next proof
+    # Get data from POST
     data = request.get_json()
+
     block = blockchain.last_block
     proof = blockchain.proof_of_work(block)
 
