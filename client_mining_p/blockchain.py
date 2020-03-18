@@ -130,14 +130,20 @@ node_identifier = str(uuid4()).replace('-', '')
 blockchain = Blockchain()
 
 
-@app.route('/mine', methods=['GET'])
+@app.route('/mine', methods=['POST'])
 def mine():
     # Run the proof of work algorithm to get the next proof
-
+    data = request.get_json()
     block = blockchain.last_block
     proof = blockchain.proof_of_work(block)
 
-    # Forge the new Block by adding it to the chain with the proof
+    # Check that 'proof', and 'id' are present
+    if not data.proof and not data.id:
+        response = {
+            'message': "Missing proof or id"
+        }
+        return jsonify(response), 400
+        # Forge the new Block by adding it to the chain with the proof
 
     block_hash = blockchain.hash(block)
     new_block = blockchain.new_block(proof, block_hash)
