@@ -4,21 +4,33 @@ import { Button, Form, Badge, Container, Tabs, Tab } from 'react-bootstrap';
 
 const Home = () => {
   const [userID, setUserID] = useState();
-  const [receiver, setReceiver] = useState();
-  const [amount, setAmount] = useState();
   const [balace, setBalance] = useState(0);
+  const [transactions, setTransactions] = useState();
 
   const handleSubmit = e => {
-    console.log('Click button: ', userID);
     e.preventDefault();
     axios
       .get('http://localhost:5000/chain')
       .then(res => {
-        console.log(res);
+        const transArray = res.data.chain;
+        filterResults(transArray);
       })
       .catch(err => {
         console.log(err);
       });
+  };
+
+  const filterResults = arr => {
+    let total = 0;
+    for (var i = 0; i < arr.length; i++) {
+      let myArr = arr[i]['transactions'];
+      for (var j = 0; j < myArr.length; j++) {
+        if (myArr[0]['amount'] > 0 && myArr[0]['receiver'] == `${userID}\n`) {
+          total += myArr[0]['amount'];
+        }
+      }
+    }
+    setBalance(total);
   };
   return (
     <div>
@@ -32,15 +44,13 @@ const Home = () => {
                   as="select"
                   onChange={e => setUserID(e.target.value)}
                 >
-                  <option>1</option>
-                  <option>2</option>
-                  <option>3</option>
-                  <option>4</option>
-                  <option>5</option>
+                  <option>Select User</option>
+                  <option>Fritz</option>
+                  <option>Alex</option>
                 </Form.Control>
               </Form.Group>
               <Button variant="primary" type="submit" onClick={handleSubmit}>
-                Submit
+                Get Results
               </Button>
             </Form>
             <Container className="App-header">
