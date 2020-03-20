@@ -47,6 +47,19 @@ class Blockchain(object):
         # Return the new block
         return block
 
+    def new_transaction(self, sender, reciver, amount):
+        new_transaction = {
+            'timestamp': time(),
+            'sender': sender,
+            'reciver': reciver,
+            'amount': amount
+        }
+        # append so it goes on the current transaction
+        self.current_transactions.append(new_transaction)
+        # Return the index of block that will hold this transaction
+        future_index = self.last_block['index'] + 1
+        return future_index
+
     def hash(self, block):
         """
         Creates a SHA-256 hash of a Block
@@ -117,7 +130,7 @@ class Blockchain(object):
         guess = f'{block_string}{proof}'.encode()
 
         guess_hash = hashlib.sha256(guess).hexdigest()
-        return guess_hash[:6] == '000000'
+        return guess_hash[:3] == '000'
 
 
 # Instantiate our Node
@@ -125,9 +138,6 @@ app = Flask(__name__)
 
 # Generate a globally unique address for this node
 node_identifier = str(uuid4()).replace('-', '')
-
-# Instantiate the Blockchain
-blockchain = Blockchain()
 
 
 @app.route('/last_block', methods=['GET'])
@@ -138,6 +148,27 @@ def last_block():
     }
     return jsonify(response), 200
 
+# this is completly insecure
+@app.route('/transactions/new', methods=['POST'])
+def transactions_new():
+    data = request.get_json()
+    required = ['sender', 'reciver', 'amount']
+
+    if not all(k in data for k in required):
+        response = {'message': "missing values."}
+        return jsonify(response), 400
+
+    index = blockchain.new_transaction(
+        sender=data['sender'], reciver=data['receiver'], amount=data['amount'])
+    response = {
+        'message': f'Your transaction will be in block {index}'
+    }
+    return jsonify(response), 200
+
+
+# Instantiate the Blockchain
+blockchain = Blockchain()
+
 
 @app.route('/mine', methods=['POST'])
 def mine():
@@ -145,27 +176,37 @@ def mine():
     # Get data from POST
     data = request.get_json()
     provided_proof = data["proof"]
-    provided_id = data["id"]
-    # Check that 'proof', and 'id' are present
-    if provided_proof and provided_id:
-        # convert into string
+    miner_id = data["id"]
+
+    # Check that 'proof', and 'id' exist
+    if provided_proof and miner_id:
+        # convert last_block into string
         block_string = json.dumps(blockchain.last_block, sort_keys=True)
-        # Check validity by runing valid_proof like proof_of_work
-        if blockchain.valid_proof(block_string, provided_proof):
-            # prev_hash
+
+        # Check validity by runing valid_proof
+        is_valid_proof = blockchain.valid_proof(block_string, provided_proof)
+
+        if is_valid_proof:
+            # create hash
             prev_hash = blockchain.hash(blockchain.last_block)
             # create new block
             new_block = blockchain.new_block(provided_proof, prev_hash)
+
+            blockchain.new_transaction(sender='0', reciver=miner_id, amount=1)
+
             response = {
-                'message': "New Block Forged",
-                'new_block': new_block
+                'message': "New Block Forged"
             }
             return jsonify(response), 200
+        # if proof is invalid maybe the because of the hash
+        # or maybe someone already beat them to generate the proof
+        # so the provided proof is no longer valid because there is a
+        # new las_block from the new_block generated above
         else:
             response = {
                 'message': "Invalid proof",
             }
-            return jsonify(response), 401
+            return jsonify(response), 200
     else:
         response = {
             'message': "Missing proof or id"

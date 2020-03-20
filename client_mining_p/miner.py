@@ -13,13 +13,12 @@ def proof_of_work(block):
     in an effort to find a number that is a valid proof
     :return: A valid proof for the provided block
     """
-    print("Started proof_of_work")
 
     block_string = json.dumps(block, sort_keys=True)
     proof = 0
     while valid_proof(block_string, proof) is False:
         proof += 1
-    print("Finished proof_of_work")
+
     return proof
 
 
@@ -39,7 +38,7 @@ def valid_proof(block_string, proof):
     # Hashing string
     guess_hash = hashlib.sha256(guess).hexdigest()
     # return if contains six leading zeros
-    return guess_hash[:6] == '00000'
+    return guess_hash[:3] == '000'
 
 
 coins_mined = 0
@@ -71,9 +70,11 @@ if __name__ == '__main__':
             break
 
         # TODO: Get the block from `data` and use it to look for a new proof
-        block = data["block"]
-        print("---------------------------------------")
-        new_proof = proof_of_work(block)
+        last_block = data["block"]
+        print("----------------Start-----------------------")
+        new_proof = proof_of_work(last_block)
+        print("----------------Found-----------------------")
+        print("Total of tries: \(new_proof)")
 
         # When found, POST it to the server {"proof": new_proof, "id": id}
         post_data = {"proof": new_proof, "id": id}
