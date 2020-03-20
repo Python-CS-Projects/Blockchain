@@ -10,6 +10,10 @@
   }
 }
 
+td,
+thead {
+  color: white;
+}
 .App-header {
   background-color: #282c34;
   min-height: 50vh;

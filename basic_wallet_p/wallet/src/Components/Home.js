@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Button, Form, Badge, Container, Tabs, Tab } from 'react-bootstrap';
+import Moment from 'react-moment';
+import 'moment-timezone';
+import {
+  Button,
+  Form,
+  Badge,
+  Container,
+  Tabs,
+  Tab,
+  Table
+} from 'react-bootstrap';
 
 const Home = () => {
   const [userID, setUserID] = useState();
   const [balace, setBalance] = useState(0);
-  const [transactions, setTransactions] = useState();
+  const [transactions, setTransactions] = useState([]);
 
   const handleSubmit = e => {
     e.preventDefault();
@@ -22,15 +32,18 @@ const Home = () => {
 
   const filterResults = arr => {
     let total = 0;
+    let transArr = [];
     for (var i = 0; i < arr.length; i++) {
       let myArr = arr[i]['transactions'];
       for (var j = 0; j < myArr.length; j++) {
         if (myArr[0]['amount'] > 0 && myArr[0]['receiver'] == `${userID}\n`) {
+          transArr.push(myArr[0]);
           total += myArr[0]['amount'];
         }
       }
     }
     setBalance(total);
+    setTransactions(transArr);
   };
   return (
     <div>
@@ -61,7 +74,38 @@ const Home = () => {
             </Container>
           </Container>
         </Tab>
-        <Tab eventKey="Transactions" title="Transactions"></Tab>
+        <Tab eventKey="Transactions" title="Transactions">
+          <Container>
+            <br />
+            <br />
+            <Table striped bordered hover>
+              <thead>
+                <tr>
+                  <th>Amount</th>
+                  <th>Receiver</th>
+                  <th>Sender</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map(t => (
+                  <tr key={t.timestamp}>
+                    <td>${t.amount}</td>
+                    <td>{t.receiver}</td>
+                    <td>{t.sender}</td>
+                    <td>
+                      <Moment format="YYYY/MM/DD" unix>
+                        {t.timestamp}
+                      </Moment>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+            <br />
+            <br />
+          </Container>
+        </Tab>
       </Tabs>
     </div>
   );
