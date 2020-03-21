@@ -12,7 +12,19 @@ import {
   Table
 } from 'react-bootstrap';
 
+////////////////How To Use///////////////////////////
+
+// In order to use it first run:
+// 1. blockchain.py
+// 2. miner.py and wait to generate some coins then stop
+// 3. then chain the name in my_id.text (Alex or Fritz)
+// 4. miner.py and wait to generate some coins then stop
+// 5. Run switch to this directory to run npm start and test
+
+///////////////////////////////////////////
+
 const Home = () => {
+  //Hooks
   const [userID, setUserID] = useState();
   const [balace, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
@@ -22,7 +34,9 @@ const Home = () => {
     axios
       .get('http://localhost:5000/chain')
       .then(res => {
+        //Array off transactions
         const transArray = res.data.chain;
+        //Call function to filter transactions based on selected user
         filterResults(transArray);
       })
       .catch(err => {
@@ -31,18 +45,25 @@ const Home = () => {
   };
 
   const filterResults = arr => {
+    //Properties
     let total = 0;
     let transArr = [];
+    //Nested loop to get the disired values
     for (var i = 0; i < arr.length; i++) {
       let myArr = arr[i]['transactions'];
       for (var j = 0; j < myArr.length; j++) {
+        //If the user match the receiver
         if (myArr[0]['amount'] > 0 && myArr[0]['receiver'] == `${userID}\n`) {
+          //Push to the array of transactions
           transArr.push(myArr[0]);
+          //Add to total
           total += myArr[0]['amount'];
         }
       }
     }
+    //Set balance hook
     setBalance(total);
+    //set array of transactions
     setTransactions(transArr);
   };
   return (
